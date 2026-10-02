@@ -1,7 +1,7 @@
 import httpx
 import respx
 
-from mlsapi import MlsApiClient
+from pymlsapi import MlsApiClient
 
 
 @respx.mock

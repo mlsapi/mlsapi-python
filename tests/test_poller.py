@@ -1,8 +1,8 @@
 import pytest
 
-from mlsapi.errors import JobTimeoutError, StudioJobFailedError
-from mlsapi.models import StudioJob
-from mlsapi.poller import poll_job_async, poll_job_sync
+from pymlsapi.errors import JobTimeoutError, StudioJobFailedError
+from pymlsapi.models import StudioJob
+from pymlsapi.poller import poll_job_async, poll_job_sync
 
 
 def test_poll_job_sync_success():

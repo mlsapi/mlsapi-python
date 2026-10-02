@@ -1,4 +1,4 @@
-from mlsapi.models import (
+from pymlsapi.models import (
     BaseListing,
     InteriorStyle,
     RoomType,

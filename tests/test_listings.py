@@ -2,7 +2,7 @@ import httpx
 import pytest
 import respx
 
-from mlsapi import AsyncMlsApiClient, BaseListing, IngestJob, MlsApiClient
+from pymlsapi import AsyncMlsApiClient, BaseListing, IngestJob, MlsApiClient
 
 SAMPLE_LISTING_PAYLOAD = {
     "mls_id": "A12079565",

@@ -2,7 +2,7 @@ import httpx
 import pytest
 import respx
 
-from mlsapi import (
+from pymlsapi import (
     AuthenticationError,
     InsufficientCreditsError,
     InvalidRequestError,
@@ -29,7 +29,7 @@ def test_401_authentication_error(mock_api_key):
 
 @respx.mock
 def test_402_insufficient_credits_error(mock_api_key):
-    respx.post("https://mlsapi.dev/v1/studio/staging/furnish").mock(
+    respx.post("https://mlsapi.dev/v1/studio/staging/stage").mock(
         return_value=httpx.Response(
             402, json={"error": {"code": "INSUFFICIENT_CREDITS", "message": "Top up required"}}
         )
@@ -68,7 +68,7 @@ def test_404_not_found_error(mock_api_key):
 
 @respx.mock
 def test_400_invalid_request_error(mock_api_key):
-    respx.post("https://mlsapi.dev/v1/studio/staging/furnish").mock(
+    respx.post("https://mlsapi.dev/v1/studio/staging/stage").mock(
         return_value=httpx.Response(
             400, json={"error": {"code": "BAD_REQUEST", "message": "Missing photo_url"}}
         )

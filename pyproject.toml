@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mlsapi"
-version = "0.1.0"
+name = "pymlsapi"
+version = "0.1.1"
 description = "Official Python client library for mlsapi.dev — Real estate MLS listing ingestion, property intelligence, and Studio visual AI"
 readme = "README.md"
 license = "MIT"
@@ -53,7 +53,7 @@ Repository = "https://github.com/mlsapi/mlsapi-python"
 Changelog = "https://github.com/mlsapi/mlsapi-python/releases"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/mlsapi"]
+packages = ["src/pymlsapi"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

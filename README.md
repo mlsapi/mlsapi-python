@@ -4,8 +4,8 @@ The official Python client library for **[mlsapi.dev](https://mlsapi.dev)**.
 
 Access real-time MLS listing data, property intelligence, CapEx lifecycle analysis, AI-generated marketing copy, and the complete suite of **Studio Visual AI** generative tools (virtual staging, twilight conversion, decluttering, 3D dollhouse floor plans, 4K upscaling, ad creatives, and video generation).
 
-[![PyPI version](https://img.shields.io/pypi/v/mlsapi.svg?style=flat-square)](https://pypi.org/project/mlsapi/)
-[![Python versions](https://img.shields.io/pypi/pyversions/mlsapi.svg?style=flat-square)](https://pypi.org/project/mlsapi/)
+[![PyPI version](https://img.shields.io/pypi/v/pymlsapi.svg?style=flat-square)](https://pypi.org/project/pymlsapi/)
+[![Python versions](https://img.shields.io/pypi/pyversions/mlsapi.svg?style=flat-square)](https://pypi.org/project/pymlsapi/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/psf/black)
 
@@ -34,6 +34,11 @@ Access real-time MLS listing data, property intelligence, CapEx lifecycle analys
   - [12. 4K Super-Resolution Upscaling](#12-4k-super-resolution-upscaling)
   - [13. Branded Multi-Placement Ad Creatives](#13-branded-multi-placement-ad-creatives)
   - [14. AI Video Walkthroughs & Voice/Subtitle Polish](#14-ai-video-walkthroughs--voicesubtitle-polish)
+  - [15. Restyle a Furnished Room](#15-restyle-a-furnished-room)
+  - [16. Architectural Rendering (CAD / Sketch to Photoreal)](#16-architectural-rendering-cad--sketch-to-photoreal)
+  - [17. Photo-to-Video: Walkthrough, Transition & House Tour](#17-photo-to-video-walkthrough-transition--house-tour)
+  - [18. Custom Generative Prompt](#18-custom-generative-prompt)
+  - [19. Social Publishing](#19-social-publishing)
 - [Asynchronous Jobs & Progress Callbacks](#asynchronous-jobs--progress-callbacks)
 - [Error Handling](#error-handling)
 - [Supported Presets Reference](#supported-presets-reference)
@@ -57,13 +62,13 @@ Install via pip, uv, or poetry:
 
 ```bash
 # pip
-pip install mlsapi
+pip install pymlsapi
 
 # uv
-uv add mlsapi
+uv add pymlsapi
 
 # poetry
-poetry add mlsapi
+poetry add pymlsapi
 ```
 
 Requires **Python 3.9+**.
@@ -76,7 +81,7 @@ Requires **Python 3.9+**.
 
 ```python
 import os
-from mlsapi import MlsApiClient
+from pymlsapi import MlsApiClient
 
 # Initialize the client with your API key
 mls = MlsApiClient(api_key=os.environ.get("MLSAPI_KEY"))
@@ -103,7 +108,7 @@ print(f"Before/after comparison: {staged.before_after_comparison_url}")
 ```python
 import asyncio
 import os
-from mlsapi import AsyncMlsApiClient
+from pymlsapi import AsyncMlsApiClient
 
 async def main():
     async with AsyncMlsApiClient(api_key=os.environ.get("MLSAPI_KEY")) as mls:
@@ -126,16 +131,22 @@ asyncio.run(main())
 Obtain your API key from the **[mlsapi.dev Dashboard](https://mlsapi.dev)**.
 
 ```python
-from mlsapi import MlsApiClient
+from pymlsapi import MlsApiClient
 
 mls = MlsApiClient(
     api_key="sk_live_...",              # Secret API key (or MLSAPI_KEY env var)
     environment="live",                # "live" (production) or "test" (sandbox)
-    base_url="https://api.mlsapi.dev",  # Optional custom base URL or staging endpoint
+    base_url="https://mlsapi.dev",      # Optional; both environments use https://mlsapi.dev
     timeout_seconds=60.0,              # HTTP request timeout (default: 60s)
     max_retries=3,                     # Automatic retries on rate limits (429) & 5xx errors
 )
 ```
+
+The `environment` is sent on every request as the `x-key-env` header, the same way the JS SDK does it.
+
+> **Parameter names = JSON keys.** Every Studio and content method takes keyword arguments
+> named exactly like the JSON body fields the API reads (identical to the JS SDK request
+> types). Arguments you leave as `None` are not sent, so the server applies its own defaults.
 
 ---
 
@@ -318,16 +329,19 @@ new_sofa = mls.studio.staging.replace_furniture_and_wait(
     product_description="Low-profile minimalist Italian cream leather sofa",
     # Or pass an exact product catalog photo:
     # reference_product_image_url="https://example.com/catalog-sofa.jpg",
+    target_location_notes="Replace the gray 3-seat sofa under the window",
+    preserve_surroundings=True,
 )
-print("Updated sofa photo:", new_sofa.result_photo_url)
+print("Updated sofa photo:", new_sofa.updated_room_photo_url)
 
 # 2. Surface material replacement
 new_kitchen = mls.studio.staging.replace_material_and_wait(
     room_photo_url="https://cdn.mlsapi.dev/uploads/kitchen.jpg",
     surface_type="countertops",
     material_preset="Calacatta Gold Italian Marble with subtle grey and gold veining",
+    custom_finish_notes="Honed finish, soft reflections",
 )
-print("Updated kitchen countertops:", new_kitchen.result_photo_url)
+print("Updated kitchen countertops:", new_kitchen.updated_room_photo_url)
 ```
 
 ---
@@ -340,6 +354,8 @@ Test curated designer paint colors on room walls with an instant 3x3 comparison 
 swatches = mls.studio.staging.wall_colors_and_wait(
     photo_url="https://cdn.mlsapi.dev/uploads/living_room.jpg",
     palette_preset="popular_neutrals",  # 'popular_neutrals' | 'modern_earth' | 'coastal_breeze' | 'moody_darks'
+    # Or test your own colors:
+    # custom_colors=[{"name": "Hale Navy", "hex": "#303A45"}, {"name": "Sage Green", "hex": "#9BA896"}],
 )
 
 print("3x3 comparison grid:", swatches.comparison_grid_3x3_url)
@@ -398,7 +414,7 @@ Generate compliant real estate ad creatives with agent branding kits, MLS proper
 
 ```python
 ads = mls.studio.creatives.generate_and_wait(
-    mls_id="A12079565",
+    mls_id="A12079565",      # Or pass photo_url=/photos= plus property_details={...} for any property
     trigger="just_listed",   # 'just_listed' | 'open_house' | 'price_improved' | 'just_sold'
     direction="magazine",    # 'magazine' | 'bold' | 'warm'
     placements=["feed_portrait", "square", "link", "flyer"],
@@ -412,7 +428,7 @@ ads = mls.studio.creatives.generate_and_wait(
 )
 
 print("1:1 Square Feed Ad:", ads.creatives.get("square").image_url)
-print("9:16 Vertical Story Ad:", ads.creatives.get("feed_portrait").image_url)
+print("4:5 Portrait Feed Ad:", ads.creatives.get("feed_portrait").image_url)
 print("Fair Housing compliance passed:", ads.compliance.fair_housing_passed)
 ```
 
@@ -439,6 +455,109 @@ polished_video = mls.studio.video.enhance_and_wait(
 )
 
 print("Reels / TikTok Video:", polished_video.mastered_videos[0].url)
+```
+
+---
+
+### 15. Restyle a Furnished Room
+
+```python
+restyled = mls.studio.staging.restyle_and_wait(
+    photo_url="https://cdn.mlsapi.dev/uploads/dated_living_room.jpg",
+    style="japandi",
+    room_type="living_room",
+    retain_layout=True,
+    custom_restyle_instructions="Low ash-wood furniture, boucle cushions, paper lantern lighting",
+)
+print("Restyled photo:", restyled.restyled_photo_url)
+```
+
+---
+
+### 16. Architectural Rendering (CAD / Sketch to Photoreal)
+
+```python
+render = mls.studio.render.architectural_and_wait(
+    source_image_url="https://cdn.mlsapi.dev/uploads/sketchup_viewport.png",
+    render_type="interior",            # 'interior' | 'exterior'
+    style="modern_luxury",
+    lighting_environment="golden_hour",  # 'daylight' | 'golden_hour' | 'twilight' | 'overcast' | 'night'
+    weather="clear_sunny",
+    season="summer",
+    custom_instructions="Travertine fireplace wall, wide-plank oak flooring",
+)
+print("Rendered image:", render.rendered_image_url)
+```
+
+---
+
+### 17. Photo-to-Video: Walkthrough, Transition & House Tour
+
+```python
+# Animate a single photo into a 5s/10s camera move
+clip = mls.studio.video.walkthrough_and_wait(
+    photo_url="https://cdn.mlsapi.dev/uploads/living_room.jpg",
+    motion="slow_zoom_in",       # 'orbit_left' | 'orbit_right' | 'pan_left' | 'pan_right' | 'slow_zoom_in' | 'dolly_out' | ...
+    duration_seconds=5,          # 5 or 10
+    custom_motion_prompt="Slow push toward the fireplace",
+    aspect_ratio="9:16",
+)
+print("Walkthrough clip:", clip.video_url)
+
+# Before/after morph between two images
+morph = mls.studio.video.transition_and_wait(
+    start_image_url="https://cdn.mlsapi.dev/uploads/empty_living_room.jpg",
+    end_image_url=restyled.restyled_photo_url,
+    duration_seconds=5,          # 5 or 10
+    transition_style="furnishing_timelapse",
+    aspect_ratio="9:16",
+)
+print("Transition video:", morph.video_url)
+
+# Multi-room house tour
+tour = mls.studio.video.tour_and_wait(
+    ordered_photos=[
+        {"room_name": "Exterior Front", "photo_url": "https://cdn.mlsapi.dev/uploads/front.jpg", "highlight": "Double-door entry"},
+        {"room_name": "Chef Kitchen", "photo_url": "https://cdn.mlsapi.dev/uploads/kitchen.jpg", "highlight": "Waterfall island"},
+        {"room_name": "Primary Suite", "photo_url": "https://cdn.mlsapi.dev/uploads/primary.jpg"},
+    ],
+    duration_seconds=15,         # 12 | 15 | 30
+    auto_script=True,
+    aspect_ratio="9:16",
+    music_genre="ambient_luxury",
+)
+print("House tour:", tour.video_url, f"({tour.shots_count} shots)")
+```
+
+---
+
+### 18. Custom Generative Prompt
+
+```python
+custom = mls.studio.custom.generate_and_wait(
+    prompt="Turn this living room into a sunken mid-century conversation pit with terrazzo floors",
+    reference_image_urls=["https://cdn.mlsapi.dev/uploads/room.jpg"],
+    aspect_ratio="16:9",         # '1:1' | '3:4' | '4:3' | '16:9' | '9:16'
+)
+print("Generated image:", custom.image_url)
+```
+
+---
+
+### 19. Social Publishing
+
+```python
+published = mls.studio.social.publish(
+    asset_url=tour.video_url,
+    asset_type="video",
+    destinations=[
+        {"platform": "instagram", "target_type": "reels", "caption": "Just listed in Coral Gables!"},
+        {"platform": "youtube", "target_type": "shorts", "title": "Coral Gables house tour"},
+    ],
+    schedule_time="immediate",
+)
+for item in published.results:
+    print(item.platform, item.status, item.post_url)
 ```
 
 ---
@@ -485,7 +604,7 @@ print("Result URL:", completed_job.result.staged_photo_url)
 All API errors inherit from `MlsApiError` and expose the HTTP status code, error code, and server message.
 
 ```python
-from mlsapi.errors import (
+from pymlsapi.errors import (
     MlsApiError,
     AuthenticationError,
     NotFoundError,

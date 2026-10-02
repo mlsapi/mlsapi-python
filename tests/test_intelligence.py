@@ -2,7 +2,7 @@ import httpx
 import pytest
 import respx
 
-from mlsapi import AsyncMlsApiClient, MlsApiClient, PropertyIntelligence
+from pymlsapi import AsyncMlsApiClient, MlsApiClient, PropertyIntelligence
 
 SAMPLE_INTELLIGENCE_PAYLOAD = {
     "mls_id": "A12079565",

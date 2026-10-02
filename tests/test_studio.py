@@ -1,7 +1,7 @@
 import httpx
 import respx
 
-from mlsapi import (
+from pymlsapi import (
     AdCreativesResult,
     DeclutterResult,
     DeStageEmptyResult,
@@ -24,7 +24,7 @@ from mlsapi import (
 
 @respx.mock
 def test_staging_stage_and_wait(mock_api_key):
-    respx.post("https://mlsapi.dev/v1/studio/staging/furnish").mock(
+    respx.post("https://mlsapi.dev/v1/studio/staging/stage").mock(
         return_value=httpx.Response(202, json={"job_id": "job_stage_1", "status": "processing"})
     )
     respx.get("https://mlsapi.dev/v1/studio/jobs/job_stage_1").mock(
@@ -357,7 +357,11 @@ def test_creatives_social_video_upload(mock_api_key):
         assert isinstance(ads, AdCreativesResult)
         assert ads.compliance.fair_housing_passed is True
 
-        soc = client.studio.social.publish("https://img.jpg", destinations=["instagram"])
+        soc = client.studio.social.publish(
+            "https://img.jpg",
+            destinations=[{"platform": "instagram", "target_type": "feed"}],
+            asset_type="image",
+        )
         assert isinstance(soc, SocialPublishResult)
         assert soc.status == "published"
 

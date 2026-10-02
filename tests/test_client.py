@@ -1,6 +1,6 @@
 import pytest
 
-from mlsapi import MLS, AsyncMlsApiClient, MlsApiClient
+from pymlsapi import MLS, AsyncMlsApiClient, MlsApiClient
 
 
 def test_client_init(mock_api_key):

@@ -1,15 +1,18 @@
-name: Test & Lint
+name: CI Tests & Lint
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
+    name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
@@ -24,8 +27,11 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
-      - name: Install dependencies & run tests
+      - name: Run Test Suite (pytest)
         run: uv run --python ${{ matrix.python-version }} --extra dev pytest
 
-      - name: Lint check
+      - name: Lint Check (ruff)
         run: uv run --python ${{ matrix.python-version }} --with ruff ruff check src tests
+
+      - name: Format Check (black)
+        run: uv run --python ${{ matrix.python-version }} --with black black --check src tests

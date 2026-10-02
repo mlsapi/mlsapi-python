@@ -3,14 +3,42 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
 
 jobs:
-  pypi-publish:
-    name: Build and publish Python 🐍 distribution 📦 to PyPI
+  test:
+    name: Verify Tests Before Publishing
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Run Test Suite
+        run: uv run --python ${{ matrix.python-version }} --extra dev pytest
+
+      - name: Lint Check
+        run: uv run --python ${{ matrix.python-version }} --with ruff ruff check src tests
+
+  publish:
+    name: Build & Publish to PyPI
+    needs: [test]
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Mandatory for PyPI Trusted Publishing
+      id-token: write  # Mandatory for PyPI Trusted Publishing (OIDC)
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -20,10 +48,12 @@ jobs:
         with:
           version: "latest"
 
-      - name: Build distributions
+      - name: Build distributions (sdist & wheel)
         run: uv build
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true

@@ -109,12 +109,12 @@ sdks/python/
 
 #### Synchronous Client
 ```python
-from mlsapi import MlsApiClient
+from pymlsapi import MlsApiClient
 
 mls = MlsApiClient(
     api_key="sk_live_...",            # Or reads from MLSAPI_KEY environment variable
     environment="live",              # "live" | "test"
-    base_url="https://api.mlsapi.dev",# Optional custom base URL
+    base_url="https://mlsapi.dev",    # Optional custom base URL
     timeout_seconds=60.0,             # Request timeout in seconds
     max_retries=3,                    # Retries on 429/5xx errors
 )
@@ -122,7 +122,7 @@ mls = MlsApiClient(
 
 #### Asynchronous Client
 ```python
-from mlsapi import AsyncMlsApiClient
+from pymlsapi import AsyncMlsApiClient
 
 async with AsyncMlsApiClient(api_key="sk_live_...") as mls:
     listing = await mls.listings.get_and_wait("A12079565")
